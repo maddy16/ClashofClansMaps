@@ -15,9 +15,15 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.ProgressBar;
 import android.widget.Toast;
+
+import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 public class NavigationActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
@@ -32,6 +38,9 @@ public class NavigationActivity extends AppCompatActivity
      */
     private SectionsPagerAdapter mSectionsPagerAdapter;
     static int townHallNum;
+    static HashMap<String,Object[]> listsMap;
+
+    TabLayout tbl_pages;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,11 +54,66 @@ public class NavigationActivity extends AppCompatActivity
         drawer.setDrawerListener(toggle);
         toggle.syncState();
         townHallNum = 11;
+        prepareData();
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        tbl_pages= (TabLayout) findViewById(R.id.tbl_pages);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
+
+        setTabs();
+    }
+    void prepareData(){
+        listsMap = new HashMap<>();
+        Field[] fields = R.drawable.class.getFields();
+        int [][] indexers = new int[11][4];
+        for(int i =0;i<indexers.length;i++){
+            for(int j=0;j<indexers[i].length;j++){
+                indexers[i][j]=0;
+            }
+        }
+        Object [][] mainArray = new Object[11][4];
+        for(int i =0;i<mainArray.length;i++){
+            for(int j=0;j<mainArray[i].length;j++){
+                ArrayList<MapModel> list = new ArrayList<>();
+                mainArray[i][j] = list;
+            }
+        }
+        for(Field field : fields){
+            String name = field.getName();
+            if(name.startsWith("coc")){
+                String [] cats = name.split("_");
+                String townHall = cats[1].substring(2);
+                int tIndex = Integer.parseInt(townHall)-1;
+                int catIndex = 0;
+                String category = cats[2];
+                MapModel model = new MapModel();
+                model.setMapImage(getResources().getIdentifier(field.getName(), "drawable", getPackageName()));
+                String mapName = "";
+                if(category.equalsIgnoreCase("w")){
+                    mapName +="War_";
+                    catIndex=0;
+                } else if(category.equalsIgnoreCase("t")){
+                    mapName +="Trophy_";
+                    catIndex=1;
+                } else if(category.equalsIgnoreCase("f")){
+                    mapName +="Farming_";
+                    catIndex=2;
+                } else if(category.equalsIgnoreCase("h")){
+                    mapName +="Hybrid_";
+                    catIndex=3;
+                }
+                model.setMapName(mapName+townHall+0+cats[3]);
+                ArrayList<MapModel> list  = (ArrayList<MapModel>) mainArray[tIndex][catIndex];
+                list.add(model);
+            }
+        }
+        for(int i = 0;i<mainArray.length;i++){
+            listsMap.put((i+1)+"",mainArray[i]);
+        }
+    }
+    void setTabs(){
         mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
@@ -57,7 +121,8 @@ public class NavigationActivity extends AppCompatActivity
         ViewPager vp_pages= (ViewPager) findViewById(R.id.vp_pages);
         vp_pages.setAdapter(mSectionsPagerAdapter);
 
-        TabLayout tbl_pages= (TabLayout) findViewById(R.id.tbl_pages);
+
+
         tbl_pages.setupWithViewPager(vp_pages);
         vp_pages.setOnPageChangeListener(new ViewPager.OnPageChangeListener() {
             @Override
@@ -76,7 +141,6 @@ public class NavigationActivity extends AppCompatActivity
             }
         });
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -170,13 +234,14 @@ public class NavigationActivity extends AppCompatActivity
     public boolean onNavigationItemSelected(MenuItem item) {
         // Handle navigation view item clicks here.
         int id = item.getItemId();
-
-        if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
+        String title = item.getTitle()+"";
+        if(title.contains("Town")){
+            String [] wordsArr =title.split(" ");
+            int townId = Integer.parseInt(wordsArr[wordsArr.length-1]);
+            townHallNum = townId;
+            setTabs();
 
         }
-
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
         return true;

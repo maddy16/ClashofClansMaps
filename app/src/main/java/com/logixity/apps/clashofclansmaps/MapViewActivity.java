@@ -2,6 +2,7 @@ package com.logixity.apps.clashofclansmaps;
 
 import android.Manifest;
 import android.annotation.TargetApi;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -9,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -50,6 +52,14 @@ public class MapViewActivity extends AppCompatActivity {
             permissionAllowed();
         }
     }
+    public void downloadImgClicked(View v) {
+        option=2;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            checkPermissions();
+        } else{
+            permissionAllowed();
+        }
+    }
     @TargetApi(23)
     public void checkPermissions(){
         if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
@@ -63,10 +73,35 @@ public class MapViewActivity extends AppCompatActivity {
     public void permissionAllowed(){
         if(option==1){
             shareImage();
-        } else {
-
+        } else if(option==2) {
+            downloadImage();
         }
 
+    }
+    void downloadImage(){
+        Bitmap bitmap= BitmapFactory.decodeResource(getResources(),imageId);
+        String path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)+"map_"+System.currentTimeMillis()+".jpg";
+        OutputStream out = null;
+        File file=new File(path);
+        try {
+            out = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
+            out.flush();
+            out.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        path=file.getPath();
+
+
+        ContentValues values = new ContentValues();
+
+        values.put(MediaStore.Images.Media.DATE_TAKEN, System.currentTimeMillis());
+        values.put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg");
+        values.put(MediaStore.MediaColumns.DATA, path);
+
+        getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+        Toast.makeText(this, "Map Saved to Gallery", Toast.LENGTH_SHORT).show();
     }
     void shareImage(){
         Bitmap bitmap= BitmapFactory.decodeResource(getResources(),imageId);

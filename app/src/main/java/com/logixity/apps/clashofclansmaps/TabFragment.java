@@ -22,6 +22,7 @@ public class TabFragment extends Fragment {
     private RecyclerView.LayoutManager layoutManager;
     private RecyclerView.Adapter adapter;
     private List<MapModel> mapsList;
+    int category;
 
     public TabFragment() {
     }
@@ -32,6 +33,7 @@ public class TabFragment extends Fragment {
      */
     public static TabFragment newInstance(int sectionNumber) {
         TabFragment fragment = new TabFragment();
+        fragment.category = sectionNumber;
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -47,14 +49,13 @@ public class TabFragment extends Fragment {
         recyclerView.setHasFixedSize(true);
         layoutManager = new LinearLayoutManager(getContext());
         recyclerView.setLayoutManager(layoutManager);
-        mapsList = new ArrayList<>();
-        for(int i=1;i<=10;i++){
-            MapModel model = new MapModel();
-            model.setMapImage(R.drawable.coc_th_11);
-            model.setMapName("Map # "+ (1130+i));
-            mapsList.add(model);
-        }
-        adapter = new MapsAdapter(mapsList,getContext());
+
+        Object[] objects = NavigationActivity.listsMap.get(NavigationActivity.townHallNum + "");
+        if (category == 0)
+            mapsList = (List<MapModel>) objects[category];
+        else
+            mapsList = (List<MapModel>) objects[category-1];
+        adapter = new MapsAdapter(mapsList, getContext());
         recyclerView.setAdapter(adapter);
         return rootView;
     }

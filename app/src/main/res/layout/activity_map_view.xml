@@ -35,6 +35,7 @@
             android:layout_weight="1"
             android:drawableLeft="@drawable/ic_file_download"
             android:id="@+id/downloadBtn"
+            android:onClick="downloadImgClicked"
             android:text="Download"
             />
 
@@ -52,7 +53,7 @@
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:layout_alignParentTop="true"
-        app:srcCompat="@drawable/coc_th_11"
+        app:srcCompat="@drawable/dcoc_th_11"
         android:layout_above="@id/linearBtns"
         android:id="@+id/mapZoomImage"
         />
